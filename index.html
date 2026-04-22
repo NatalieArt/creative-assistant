@@ -1797,7 +1797,7 @@
             </div>
             <figure class="media-panel">
               <div class="asset-frame">
-                <video autoplay muted loop controls playsinline preload="metadata" poster="assets/8-balloon-after.png">
+                <video data-final-video autoplay muted loop controls playsinline preload="auto" poster="assets/8-balloon-after.png">
                   <source src="assets/balloon-trump-video.mp4" type="video/mp4">
                 </video>
               </div>
@@ -1946,6 +1946,47 @@
         }, 1800);
       });
     });
+
+    const finalVideo = document.querySelector("[data-final-video]");
+
+    if (finalVideo) {
+      const tryAutoplay = () => {
+        finalVideo.muted = true;
+        finalVideo.playsInline = true;
+
+        const playAttempt = finalVideo.play();
+        if (playAttempt && typeof playAttempt.catch === "function") {
+          playAttempt.catch(() => {});
+        }
+      };
+
+      if (document.readyState === "complete") {
+        tryAutoplay();
+      } else {
+        window.addEventListener("load", tryAutoplay, { once: true });
+      }
+
+      finalVideo.addEventListener("loadeddata", tryAutoplay);
+      finalVideo.addEventListener("canplay", tryAutoplay);
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+          tryAutoplay();
+        }
+      });
+
+      if ("IntersectionObserver" in window) {
+        const videoObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              tryAutoplay();
+            }
+          });
+        }, { threshold: 0.35 });
+
+        videoObserver.observe(finalVideo);
+      }
+    }
   </script>
 </body>
 </html>
